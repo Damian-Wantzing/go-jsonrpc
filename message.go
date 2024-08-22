@@ -1,12 +1,87 @@
 package jsonrpc
 
+import (
+	"encoding/json"
+	"errors"
+)
+
+type Params interface {
+	Type() string
+}
+
+type ArrayParams []any
+
+func (p ArrayParams) Type() string {
+	return "array"
+}
+
+type MapParams map[string]any
+
+func (p MapParams) Type() string {
+	return "map"
+}
+
 // A Request object is used to invoke a method on a remote server
 // https://www.jsonrpc.org/specification#request_object
 type Request struct {
-	Jsonrpc string         `json:"jsonrpc"` // The version of the JSON-RPC protocol, which must always be exactly "2.0"
-	Method  string         `json:"method"`  // A string containing the name of the method to be invoked. Must start with "rpc.METHOD"
-	Params  map[string]any `json:"params"`  // The parameters to pass to the method
-	Id      any            `json:"id"`      // An identifier specified by the client. Must be int, string or null. If omitted, the request is a notification.
+	Jsonrpc string // The version of the JSON-RPC protocol, which must always be exactly "2.0"
+	Method  string // A string containing the name of the method to be invoked. Must start with "rpc.METHOD"
+	Params  Params // The parameters to pass to the method
+	ID      *any   // An identifier specified by the client. Must be int, string or null. If omitted, the request is a notification.
+}
+
+// Custom unmarhshal method to parse a raw JSON into the correct
+// Request object
+func (r *Request) UnmarshalJSON(data []byte) error {
+
+	// A raw request that we can use to determine the params
+	type rawRequest struct {
+		Jsonrpc string `json:"jsonrpc"`
+		Method  string `json:"method"`
+		ID      *any   `json:"id,omitempty"`
+		Params  *any   `json:"params,omitempty"`
+	}
+
+	var raw rawRequest
+	err := json.Unmarshal(data, &raw)
+	if err != nil {
+		return err
+	}
+
+	if raw.Jsonrpc != "2.0" {
+		return errors.New("Invalid JSON-RPC version")
+	}
+
+	r.Jsonrpc = raw.Jsonrpc
+	r.Method = raw.Method
+	r.ID = raw.ID
+
+	if raw.Params == nil {
+		return nil
+	}
+
+	if params, ok := (*raw.Params).(MapParams); ok {
+		r.Params = params
+	}
+
+	if params, ok := (*raw.Params).(ArrayParams); ok {
+		r.Params = params
+	}
+
+	return nil
+}
+
+// Returns whether the request is a notification
+func (r *Request) IsNotification() bool {
+	return r.ID == nil
+}
+
+// ParseRequest parses a raw json request into
+// a request object
+func ParseRequest(data []byte) (Request, error) {
+	var req Request
+	err := json.Unmarshal(data, &req)
+	return req, err
 }
 
 // A Response object is used to return the result of a method invocation
