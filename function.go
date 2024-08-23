@@ -23,34 +23,34 @@ func (m *Function) execute(request Request) (interface{}, error) {
 	return nil, nil
 }
 
-// The Methods struct hold the methods that will be executed
+// The Functions struct hold the methods that will be executed
 // when specifically requested by the JSONRPC protocol
 // if you want to expose a new method to JSONRPC, this
 // is where you add it
-type Methods struct {
+type Functions struct {
 	functions map[string]Function
 }
 
-// Creates and returns a new Methods
-func New() Methods {
-	return Methods{
+// Creates and returns a new Functions
+func New() Functions {
+	return Functions{
 		functions: make(map[string]Function),
 	}
 }
 
-// Add a method to the Methods
+// Add a method to the Functions
 // This will expose the method to the JSONRPC protocol
-func (e *Methods) Add(function Function) {
+func (e *Functions) Add(function Function) {
 	e.functions[function.name] = function
 }
 
 // Remove a method from the executor
 // This will hide the method from the JSONRPC protocol
-func (e *Methods) Remove(name string) {
+func (e *Functions) Remove(name string) {
 	delete(e.functions, name)
 }
 
 // Execute a method from a JSONRPC message
-func (e *Methods) execute(request Request) (*Response, *Error) {
+func (e *Functions) execute(request Request) (*Response, *Error) {
 	return nil, nil
 }

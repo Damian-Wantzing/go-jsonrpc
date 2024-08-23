@@ -3,6 +3,7 @@ package jsonrpc
 import "io"
 
 type JsonRPC struct {
+	methods Methods
 }
 
 // HandleRequest handles an incoming JSON-RPC request
