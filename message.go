@@ -5,18 +5,26 @@ import (
 	"errors"
 )
 
+// Params is an interface that supports either map or array
+// parameters for a Request
 type Params interface {
 	Type() string
 }
 
+// ArrayParams is used when the params for the called
+// method are provided as a (ordered) array
 type ArrayParams []any
 
+// Type returns the type of the params
 func (p ArrayParams) Type() string {
 	return "array"
 }
 
+// MapParams is used when the params for the called
+// method are provided as a map (key-value pair)
 type MapParams map[string]any
 
+// Type returns the type of the params
 func (p MapParams) Type() string {
 	return "map"
 }
@@ -60,15 +68,19 @@ func (r *Request) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	if params, ok := (*raw.Params).(MapParams); ok {
+	if params, ok := (*raw.Params).(map[string]any); ok {
+		params := MapParams(params)
 		r.Params = params
+		return nil
 	}
 
-	if params, ok := (*raw.Params).(ArrayParams); ok {
+	if params, ok := (*raw.Params).([]interface{}); ok {
+		params := ArrayParams(params)
 		r.Params = params
+		return nil
 	}
 
-	return nil
+	return errors.New("Invalid params type")
 }
 
 // Returns whether the request is a notification

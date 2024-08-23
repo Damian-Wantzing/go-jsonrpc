@@ -18,7 +18,9 @@ type Executable struct {
 func (e *Executable) execute(request Request) (interface{}, error) {
 	// TODO: we probably cannot pass the params as is
 	// since they can be passed in two ways: by name or by position
-	return e.exec(request.Params)
+	// return e.exec(request.Params)
+
+	return nil, nil
 }
 
 // The Executor hold the methods that will be executed
